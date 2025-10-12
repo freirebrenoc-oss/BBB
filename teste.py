@@ -1,7 +1,7 @@
 import streamlit as st
 
 # Define o título principal da aplicação
-st.title('Aplicativo de Manhã matinal)
+st.title('Aplicativo de Manhã matinal')
 
 # Exibe uma mensagem introdutória
 st.write("Bem-vindo! Digite seu nome abaixo para uma saudação.")
