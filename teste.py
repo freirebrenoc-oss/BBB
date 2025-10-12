@@ -1,15 +1,7 @@
 import streamlit as st
 
-st.write("Alô mundo")
-st.title('saudação')
-nome = st.text_input("Digite o seu nome")
-if nome:
-  st.write(nome.upper())
-
-import streamlit as st
-
 # Define o título principal da aplicação
-st.title('Aplicativo de Saudação Personalizada')
+st.title('Aplicativo de Manhã matinal)
 
 # Exibe uma mensagem introdutória
 st.write("Bem-vindo! Digite seu nome abaixo para uma saudação.")
@@ -31,4 +23,18 @@ if nome:
 else:
     # Mensagem exibida enquanto o campo de nome está vazio
     st.info("Aguardando seu nome...")
+
+# Trazer algum tipo de serviço
+    opcao = st.selectbox(
+        "Escolha um serviço:",
+        ["Selecione...", "Ver temperatura", "Ver umidade do ar", "Ver trânsito", "Sugestão de roupa"])
+  
+    # Mostra o que foi escolhido
+    if opcao != "Selecione...":
+        st.info(f"Você escolheu: {opcao}")
+else:
+    st.info("Aguardando seu serviço...")
+
+
+
 
