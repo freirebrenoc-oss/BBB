@@ -41,14 +41,12 @@ if nome:
         # ======================
         try:
             OPENWEATHER_KEY = st.secrets["api_keys"]["openweather"]
-            HERE_KEY = st.secrets["api_keys"]["here"]
         except KeyError:
             st.error(
                 "As chaves de API não foram encontradas em st.secrets. "
                 "Configure-as em .streamlit/secrets.toml conforme instruções."
             )
             OPENWEATHER_KEY = ""
-            HERE_KEY = ""
 
         # ======================
         # Serviço: Temperatura
