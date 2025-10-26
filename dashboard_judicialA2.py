@@ -3,85 +3,46 @@ import pandas as pd
 import plotly.express as px
 
 # 1️⃣ Título do app
-st.title("📊 Painel da Justiça Brasileira (CNJ - Justiça em Números)")
+st.title("📊 Dashboard CNJ Dinâmico")
 
-# 2️⃣ Carregar CSV com tratamento automático
-try:
-    df = pd.read_csv("BD_Consolidado_JF_Secao_23_Set_2025.csv", sep=';', encoding='utf-8')
-except Exception:
-    df = pd.read_csv("BD_Consolidado_JF_Secao_23_Set_2025.csv", sep=';', encoding='latin1')
+# 2️⃣ Upload do CSV pelo usuário
+uploaded_file = st.file_uploader("Escolha um arquivo CSV do CNJ", type="csv")
 
-# 3️⃣ Limpar nomes das colunas
-df.columns = df.columns.str.strip()  # remove espaços
-df.columns = df.columns.str.replace("\n", "")  # remove quebras de linha
-df.columns = df.columns.str.replace(" ", "_")  # substitui espaços por _
-df.columns = df.columns.str.replace("é", "e")  # substitui acentos
-df.columns = df.columns.str.replace("ç", "c")
+if uploaded_file:
+    try:
+        # Ler CSV com encoding seguro
+        df = pd.read_csv(uploaded_file, sep=';', encoding='latin1')
+    except:
+        df = pd.read_csv(uploaded_file, sep=',', encoding='latin1')
 
-# 4️⃣ Renomear colunas para padronizar (ajuste conforme seu CSV)
-colunas_esperadas = {
-    "Ano": "Ano",
-    "Tribunal": "Tribunal",
-    "Tempo_Medio": "Tempo_Medio",
-    "Taxa_Congestionamento": "Taxa_Congestionamento",
-    "Casos_Novos": "Casos_Novos"
-}
+    # Limpar nomes de colunas
+    df.columns = df.columns.str.strip().str.replace("\n", " ").str.replace(" ", "_").str.replace("é","e").str.replace("ç","c")
+    
+    st.subheader("Colunas disponíveis no CSV")
+    st.write(df.columns.tolist())
 
-for col in colunas_esperadas.keys():
-    if col not in df.columns:
-        # Tenta encontrar a coluna parecida
-        for c in df.columns:
-            if col.lower() in c.lower():
-                df.rename(columns={c: col}, inplace=True)
+    # 3️⃣ Seleção de colunas para gráficos e métricas
+    col_x = st.selectbox("Escolha a coluna para o eixo X (ex: Ano):", df.columns)
+    col_y = st.selectbox("Escolha a coluna para os valores (ex: Tempo_Medio):", df.columns)
 
-# Verificar se todas as colunas agora existem
-for col in colunas_esperadas.values():
-    if col not in df.columns:
-        st.error(f"Coluna '{col}' não encontrada no CSV. Verifique o arquivo.")
-        st.stop()
+    # 4️⃣ Filtrar dados (opcional: escolha de valor único para filtro)
+    filtro_col = st.selectbox("Filtrar por coluna (opcional):", ["Nenhum"] + list(df.columns))
+    if filtro_col != "Nenhum":
+        filtro_val = st.selectbox(f"Escolha o valor de {filtro_col}:", df[filtro_col].unique())
+        df_filtrado = df[df[filtro_col] == filtro_val]
+    else:
+        df_filtrado = df.copy()
 
-# 5️⃣ Criar filtros interativos
-anos = sorted(df["Ano"].unique())
-tribunais = sorted(df["Tribunal"].unique())
+    if df_filtrado.empty:
+        st.warning("Nenhum dado encontrado com os filtros selecionados.")
+    else:
+        # 5️⃣ Mostrar métricas básicas da coluna escolhida
+        st.subheader(f"Métricas da coluna '{col_y}'")
+        st.metric("Mínimo", df_filtrado[col_y].min())
+        st.metric("Máximo", df_filtrado[col_y].max())
+        st.metric("Média", round(df_filtrado[col_y].mean(),2))
 
-ano_selecionado = st.selectbox("Selecione o ano:", anos)
-tribunal_selecionado = st.selectbox("Selecione o tribunal:", tribunais)
-
-# 6️⃣ Filtrar os dados
-df_filtrado = df[(df["Ano"] == ano_selecionado) & (df["Tribunal"] == tribunal_selecionado)]
-
-if df_filtrado.empty:
-    st.warning("Nenhum dado encontrado para a combinação selecionada.")
-else:
-    # 7️⃣ Mostrar informações gerais
-    st.subheader(f"Indicadores do {tribunal_selecionado} em {ano_selecionado}")
-
-    tempo_medio = df_filtrado["Tempo_Medio"].values[0]
-    taxa_cong = df_filtrado["Taxa_Congestionamento"].values[0]
-    casos_novos = df_filtrado["Casos_Novos"].values[0]
-
-    st.metric("Tempo médio de tramitação (dias)", f"{tempo_medio}")
-    st.metric("Taxa de congestionamento (%)", f"{taxa_cong}")
-    st.metric("Casos novos", f"{casos_novos}")
-
-    # 8️⃣ Gráfico comparativo por tribunal no mesmo ano
-    st.subheader("📈 Comparativo entre tribunais")
-    df_ano = df[df["Ano"] == ano_selecionado]
-    fig = px.bar(
-        df_ano,
-        x="Tribunal",
-        y="Taxa_Congestionamento",
-        title=f"Taxa de Congestionamento - {ano_selecionado}"
-    )
-    st.plotly_chart(fig)
-
-    # 9️⃣ Gráfico comparativo por ano do mesmo tribunal
-    st.subheader(f"📈 Evolução do {tribunal_selecionado} ao longo dos anos")
-    df_tribunal = df[df["Tribunal"] == tribunal_selecionado]
-    fig2 = px.line(
-        df_tribunal,
-        x="Ano",
-        y="Tempo_Medio",
-        title=f"Tempo médio de tramitação - {tribunal_selecionado}"
-    )
-    st.plotly_chart(fig2)
+        # 6️⃣ Gráfico interativo
+        st.subheader(f"Gráfico de '{col_y}' vs '{col_x}'")
+        fig = px.bar(df_filtrado, x=col_x, y=col_y, title=f"{col_y} por {col_x}")
+        st.plotly_chart(fig)
