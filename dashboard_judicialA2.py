@@ -8,7 +8,7 @@ st.title("📊 Painel da Justiça Brasileira (CNJ - Justiça em Números)")
 # 2️⃣ Carregar os dados
 # Suponha que você tenha um arquivo CSV chamado "cnj_dados.csv"
 # com colunas: ["Ano", "Tribunal", "Tempo_Medio", "Taxa_Congestionamento", "Casos_Novos"]
-df = pd.read_csv("cnj_dados.csv")
+df = pd.read_csv("BD_Consolidado_JF_Secao_23_Set_2025.csv")
 
 # 3️⃣ Criar os filtros interativos
 anos = sorted(df["Ano"].unique())
