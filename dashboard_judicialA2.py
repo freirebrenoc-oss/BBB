@@ -3,46 +3,86 @@ import pandas as pd
 import plotly.express as px
 
 # 1️⃣ Título do app
-st.title("📊 Dashboard CNJ Dinâmico")
+st.title("⚖️ Painel de Desempenho dos Tribunais Brasileiros (CNJ)")
 
-# 2️⃣ Upload do CSV pelo usuário
+# 2️⃣ Upload do CSV
 uploaded_file = st.file_uploader("Escolha um arquivo CSV do CNJ", type="csv")
 
 if uploaded_file:
+    # 2a. Ler CSV com segurança (encoding automático)
     try:
-        # Ler CSV com encoding seguro
         df = pd.read_csv(uploaded_file, sep=';', encoding='latin1')
     except:
         df = pd.read_csv(uploaded_file, sep=',', encoding='latin1')
-
-    # Limpar nomes de colunas
-    df.columns = df.columns.str.strip().str.replace("\n", " ").str.replace(" ", "_").str.replace("é","e").str.replace("ç","c")
     
-    st.subheader("Colunas disponíveis no CSV")
-    st.write(df.columns.tolist())
-
-    # 3️⃣ Seleção de colunas para gráficos e métricas
-    col_x = st.selectbox("Escolha a coluna para o eixo X (ex: Ano):", df.columns)
-    col_y = st.selectbox("Escolha a coluna para os valores (ex: Tempo_Medio):", df.columns)
-
-    # 4️⃣ Filtrar dados (opcional: escolha de valor único para filtro)
-    filtro_col = st.selectbox("Filtrar por coluna (opcional):", ["Nenhum"] + list(df.columns))
-    if filtro_col != "Nenhum":
-        filtro_val = st.selectbox(f"Escolha o valor de {filtro_col}:", df[filtro_col].unique())
-        df_filtrado = df[df[filtro_col] == filtro_val]
+    # 2b. Limpar nomes de colunas
+    df.columns = df.columns.str.strip().str.replace("\n"," ").str.replace(" ","_").str.replace("é","e").str.replace("ç","c")
+    
+    # 3️⃣ Detectar possíveis indicadores disponíveis no CSV
+    possiveis_indicadores = [
+        "Numero_de_processos",
+        "Tempo_medio_de_tramitacao",
+        "Taxa_de_congestionamento",
+        "Produtividade_de_magistrados",
+        "Gastos_por_processo",
+        "Taxa_de_solucao_de_processos"
+    ]
+    
+    indicadores_disponiveis = [ind for ind in possiveis_indicadores if ind in df.columns]
+    
+    if len(indicadores_disponiveis) == 0:
+        st.error("Nenhum dos indicadores principais foi encontrado no CSV.")
     else:
-        df_filtrado = df.copy()
-
-    if df_filtrado.empty:
-        st.warning("Nenhum dado encontrado com os filtros selecionados.")
-    else:
-        # 5️⃣ Mostrar métricas básicas da coluna escolhida
-        st.subheader(f"Métricas da coluna '{col_y}'")
-        st.metric("Mínimo", df_filtrado[col_y].min())
-        st.metric("Máximo", df_filtrado[col_y].max())
-        st.metric("Média", round(df_filtrado[col_y].mean(),2))
-
-        # 6️⃣ Gráfico interativo
-        st.subheader(f"Gráfico de '{col_y}' vs '{col_x}'")
-        fig = px.bar(df_filtrado, x=col_x, y=col_y, title=f"{col_y} por {col_x}")
-        st.plotly_chart(fig)
+        st.sidebar.subheader("Escolha os indicadores para análise")
+        indicadores_selecionados = st.sidebar.multiselect(
+            "Selecione até 6 indicadores",
+            options=indicadores_disponiveis,
+            default=indicadores_disponiveis[:6]
+        )
+        
+        # 4️⃣ Filtros por ano e tribunal se existirem
+        if "Ano" in df.columns:
+            anos = sorted(df["Ano"].unique())
+            ano_selecionado = st.sidebar.selectbox("Selecione o ano:", anos)
+            df = df[df["Ano"] == ano_selecionado]
+        
+        if "Tribunal" in df.columns:
+            tribunais = sorted(df["Tribunal"].unique())
+            tribunal_selecionado = st.sidebar.selectbox("Selecione o tribunal:", tribunais)
+            df = df[df["Tribunal"] == tribunal_selecionado]
+        
+        # 5️⃣ Mostrar métricas
+        st.subheader(f"Indicadores do tribunal selecionado")
+        for ind in indicadores_selecionados:
+            valor = df[ind].mean() if pd.api.types.is_numeric_dtype(df[ind]) else "N/A"
+            st.metric(ind.replace("_"," "), round(valor,2) if isinstance(valor,float) else valor)
+        
+        # 6️⃣ Gráficos
+        st.subheader("📈 Gráficos dos indicadores")
+        for ind in indicadores_selecionados:
+            if pd.api.types.is_numeric_dtype(df[ind]):
+                fig = px.bar(df, x=df.index, y=ind, title=ind.replace("_"," "))
+                st.plotly_chart(fig)
+        
+        # 7️⃣ Análise automática de desempenho
+        st.subheader("💡 Análise automática de desempenho")
+        analise = ""
+        if "Taxa_de_congestionamento" in indicadores_selecionados and "Tempo_medio_de_tramitacao" in indicadores_selecionados:
+            tc = df["Taxa_de_congestionamento"].mean()
+            tm = df["Tempo_medio_de_tramitacao"].mean()
+            if tc > 50 and tm > 365:
+                analise += "- Tribunal apresenta **baixa eficiência**, com alta taxa de congestionamento e tempo médio de tramitação longo.\n"
+            elif tc < 30 and tm < 180:
+                analise += "- Tribunal apresenta **boa eficiência**, com baixa taxa de congestionamento e processos rápidos.\n"
+            else:
+                analise += "- Tribunal apresenta desempenho **intermediário**, há espaço para melhorias.\n"
+        
+        if "Produtividade_de_magistrados" in indicadores_selecionados:
+            pm = df["Produtividade_de_magistrados"].mean()
+            analise += f"- Produtividade média dos magistrados: {round(pm,2)} processos/julgado.\n"
+        
+        if "Gastos_por_processo" in indicadores_selecionados:
+            gp = df["Gastos_por_processo"].mean()
+            analise += f"- Gastos médios por processo: R$ {round(gp,2)}.\n"
+        
+        st.markdown(analise)
