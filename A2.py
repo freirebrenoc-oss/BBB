@@ -59,7 +59,7 @@ def calcular_inss(valor_bruto):
     elif valor_bruto <= 7507.49:
         return valor_bruto * 0.14
     else:
-        return 0  # Limite máximo do INSS
+        return valor_bruto * 0.14  # Para salários acima de 7507.49, a alíquota é 14%
 
 # Função para calcular o Imposto de Renda (IR)
 def calcular_ir(valor_bruto):
@@ -126,12 +126,15 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
         valor_aviso_previo = calcular_aviso_previo(data_admissao, data_demissao, salario_base)
         fgts = calcular_fgts(salario_base, meses_trabalhados)
         multa_fgts = calcular_multa_fgts(fgts)
-        inss = calcular_inss(valor_13_proporcional + valor_ferias_total + valor_aviso_previo)
-        ir = calcular_ir(valor_13_proporcional + valor_ferias_total + valor_aviso_previo)
+        
+        # Calcular o INSS sobre o total bruto das verbas
+        total_bruto_rescisao = valor_13_proporcional + valor_ferias_total + valor_aviso_previo + fgts + multa_fgts
+        inss = calcular_inss(total_bruto_rescisao)
+        
+        ir = calcular_ir(total_bruto_rescisao)
 
         # Total de verbas (simples)
-        total_bruto = valor_13_proporcional + valor_ferias_total + valor_aviso_previo + fgts + multa_fgts
-        total_devido = total_bruto - inss - ir
+        total_devido = total_bruto_rescisao - inss - ir
 
         # --- EXIBIÇÃO DOS RESULTADOS (Métricas Essenciais) ---
 
@@ -171,7 +174,7 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
                  f"Fórmula: `Valor Bruto * alíquota do IR correspondente`\n"
                  f"Valor: R$ {ir:,.2f}")
         
-        st.write(f"**Total Bruto (sem deduções)**: R$ {total_bruto:,.2f}")
+        st.write(f"**Total Bruto (sem deduções)**: R$ {total_bruto_rescisao:,.2f}")
         st.write(f"**Total Devido (com deduções)**: R$ {total_devido:,.2f}")
 
         # --- Gráfico de Barras com todas as verbas ---
