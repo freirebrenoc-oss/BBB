@@ -404,4 +404,4 @@ Base: Salário × Meses Trabalhados
 
         st.info("⚠️ Cálculo estimativo com base em regras gerais da CLT e tabelas tributárias vigentes. Consulte um contador ou advogado trabalhista para valores oficiais.")
 
-        st.caption("📘 Projeto de LegalTech (Direito do Trabalho) — desenvolvido em Python e Streamlit."
+        st.caption("📘 Projeto de LegalTech (Direito do Trabalho) — desenvolvido em Python e Streamlit.")
