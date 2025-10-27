@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 
@@ -13,7 +14,7 @@ st.set_page_config(
 
 # --- 2. FUNÇÃO DE CÁLCULO (Lógica Trabalhista) ---
 
-# Usaremos esta função simples para calcular meses de trabalho
+# Função para calcular meses proporcionais
 def calcular_meses_proporcionais(admissao, demissao):
     """Calcula os meses proporcionais (com a regra dos 15 dias)."""
     if demissao <= admissao:
@@ -129,28 +130,27 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
         ir = calcular_ir(valor_13_proporcional + valor_ferias_total + valor_aviso_previo)
 
         # Total de verbas (simples)
-        total_devido = valor_13_proporcional + valor_ferias_total + valor_aviso_previo + fgts + multa_fgts - inss - ir
+        total_bruto = valor_13_proporcional + valor_ferias_total + valor_aviso_previo + fgts + multa_fgts
+        total_devido = total_bruto - inss - ir
 
         # --- EXIBIÇÃO DOS RESULTADOS (Métricas Essenciais) ---
-        
+
         st.subheader(f"Resultado Completo (Meses Contados: {meses_trabalhados})")
         st.success(f"### TOTAL ESTIMADO DEVIDO: R$ {total_devido:,.2f}")
         
-        col_13, col_ferias = st.columns(2)
-        
-        col_13.metric(
-            "13º Salário Proporcional (Bruto)", 
-            f"R$ {valor_13_proporcional:,.2f}"
-        )
-        
-        col_ferias.metric(
-            "Férias Proporcionais (+ 1/3)", 
-            f"R$ {valor_ferias_total:,.2f}",
-            delta=f"1/3 Adicional: R$ {valor_terco_constitucional:,.2f}",
-            delta_color="normal"
-        )
-        
-        # Gráfico de barras com todas as verbas
+        # Passo a passo do cálculo:
+        st.markdown("### Passo a Passo do Cálculo:")
+        st.write(f"1. **13º Salário Proporcional**: R$ {valor_13_proporcional:,.2f}")
+        st.write(f"2. **Férias Proporcionais (+ 1/3)**: R$ {valor_ferias_total:,.2f} (1/3 Adicional: R$ {valor_terco_constitucional:,.2f})")
+        st.write(f"3. **Aviso Prévio**: R$ {valor_aviso_previo:,.2f}")
+        st.write(f"4. **FGTS**: R$ {fgts:,.2f}")
+        st.write(f"5. **Multa do FGTS (40%)**: R$ {multa_fgts:,.2f}")
+        st.write(f"6. **INSS**: R$ {inss:,.2f}")
+        st.write(f"7. **Imposto de Renda (IR)**: R$ {ir:,.2f}")
+        st.write(f"**Total Bruto (sem deduções)**: R$ {total_bruto:,.2f}")
+        st.write(f"**Total Devido (com deduções)**: R$ {total_devido:,.2f}")
+
+        # --- Gráfico de Barras com todas as verbas ---
         def plot_grafico_verbas_rescisorias(valor_13, valor_ferias, valor_terco, aviso, fgts, multa, inss, ir):
             categorias = ['13º Salário', 'Férias Proporcionais', '1/3 Adicional', 'Aviso Prévio', 'FGTS', 'Multa FGTS', 'INSS', 'IR']
             valores = [valor_13, valor_ferias, valor_terco, aviso, fgts, multa, inss, ir]
@@ -164,7 +164,20 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
             st.pyplot(plt)
 
         plot_grafico_verbas_rescisorias(valor_13_proporcional, valor_ferias_total, valor_terco_constitucional, valor_aviso_previo, fgts, multa_fgts, inss, ir)
-        
+
+        # --- Gráfico de Pizza (Percentual de cada parte do total) ---
+        def plot_grafico_pizza(valor_13, valor_ferias, valor_terco, aviso, fgts, multa, inss, ir, total):
+            categorias = ['13º Salário', 'Férias Proporcionais', '1/3 Adicional', 'Aviso Prévio', 'FGTS', 'Multa FGTS', 'INSS', 'IR']
+            valores = [valor_13, valor_ferias, valor_terco, aviso, fgts, multa, inss, ir]
+            porcentagens = [v / total * 100 for v in valores]
+            
+            plt.figure(figsize=(8, 8))
+            plt.pie(porcentagens, labels=categorias, autopct='%1.1f%%', startangle=90, colors=['blue', 'green', 'orange', 'red', 'purple', 'cyan', 'brown', 'pink'])
+            plt.title('Distribuição Percentual das Verbas Rescisórias', fontsize=14)
+            st.pyplot(plt)
+
+        plot_grafico_pizza(valor_13_proporcional, valor_ferias_total, valor_terco_constitucional, valor_aviso_previo, fgts, multa_fgts, inss, ir, total_devido)
+
         st.markdown("---")
         st.info("⚠️ **Atenção:** Este é um cálculo simplificado. Considere as variações conforme o caso específico.")
 
