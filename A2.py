@@ -153,4 +153,70 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
         st.write(f"2. **Férias Proporcionais (+ 1/3)**: \n\n"
                  f"Fórmula para férias: `(Salário Mensal / 12) * Meses Trabalhados`\n"
                  f"Fórmula para 1/3 adicional: `Férias Proporcionais / 3`\n"
-                 f"Valor Total: R$
+                 f"Valor Total: R$ {valor_ferias_total:,.2f} (1/3 Adicional: R$ {valor_terco_constitucional:,.2f})")
+
+        st.write(f"3. **Aviso Prévio**: \n\n"
+                 f"Fórmula: `(Salário Mensal / 30) * (30 + 3 * Anos de Serviço)`\n"
+                 f"Valor: R$ {valor_aviso_previo:,.2f}")
+
+        st.write(f"4. **FGTS**: \n\n"
+                 f"Fórmula: `Salário Mensal * 0.08 * Meses Trabalhados`\n"
+                 f"Valor: R$ {fgts:,.2f}")
+
+        st.write(f"5. **Multa do FGTS (40%)**: \n\n"
+                 f"Fórmula: `FGTS * 0.40`\n"
+                 f"Valor: R$ {multa_fgts:,.2f}")
+
+        st.write(f"6. **INSS**: \n\n"
+                 f"Fórmula: `Valor Bruto * alíquota do INSS correspondente`\n"
+                 f"Valor: R$ {inss:,.2f}")
+
+        st.write(f"7. **Imposto de Renda (IR)**: \n\n"
+                 f"Fórmula: `Valor Bruto * alíquota do IR correspondente`\n"
+                 f"Valor: R$ {ir:,.2f}")
+        
+        st.write(f"**Total Bruto (sem deduções)**: R$ {total_bruto_rescisao:,.2f}")
+        st.write(f"**Total Devido (com deduções)**: R$ {total_devido:,.2f}")
+
+        # --- Gráfico de Barras com todas as verbas ---
+        def plot_grafico_verbas_rescisorias(valor_13, valor_ferias, valor_terco, aviso, fgts, multa, inss, ir):
+            categorias = ['13º Salário', 'Férias Proporcionais', '1/3 Adicional', 'Aviso Prévio', 'FGTS', 'Multa FGTS', 'INSS', 'IR']
+            valores = [valor_13, valor_ferias, valor_terco, aviso, fgts, multa, inss, ir]
+            
+            plt.figure(figsize=(10, 6))
+            plt.bar(categorias, valores, color=['blue', 'green', 'orange', 'red', 'purple', 'cyan', 'brown', 'pink'])
+            plt.title('Distribuição das Verbas Rescisórias', fontsize=14)
+            plt.xlabel('Categorias de Verbas', fontsize=12)
+            plt.ylabel('Valor (R$)', fontsize=12)
+            plt.xticks(rotation=45)
+            st.pyplot(plt)
+
+        plot_grafico_verbas_rescisorias(valor_13_proporcional, valor_ferias_total, valor_terco_constitucional, valor_aviso_previo, fgts, multa_fgts, inss, ir)
+
+        # --- Gráfico de Pizza (Percentual de cada parte do total) ---
+        def plot_grafico_pizza(valor_13, valor_ferias, valor_terco, aviso, fgts, multa, inss, ir, total):
+            categorias = ['13º Salário', 'Férias Proporcionais', '1/3 Adicional', 'Aviso Prévio', 'FGTS', 'Multa FGTS', 'INSS', 'IR']
+            valores = [valor_13, valor_ferias, valor_terco, aviso, fgts, multa, inss, ir]
+            porcentagens = [v / total * 100 for v in valores]
+            
+            plt.figure(figsize=(8, 8))
+            plt.pie(porcentagens, labels=categorias, autopct='%1.1f%%', startangle=90, colors=['blue', 'green', 'orange', 'red', 'purple', 'cyan', 'brown', 'pink'])
+            plt.title('Distribuição Percentual das Verbas Rescisórias', fontsize=14)
+            st.pyplot(plt)
+
+        plot_grafico_pizza(valor_13_proporcional, valor_ferias_total, valor_terco_constitucional, valor_aviso_previo, fgts, multa_fgts, inss, ir, total_devido)
+
+        st.markdown("---")
+        st.info("⚠️ **Atenção:** Este é um cálculo simplificado. Considere as variações conforme o caso específico.")
+
+        # --- Fontes ---
+        st.markdown("### Fontes:")
+        st.markdown("1. **13º Salário**: Lei nº 4.090/1962.")
+        st.markdown("2. **Férias**: Art. 129 da CLT e Constituição Federal (Art. 7º, inciso XVII).")
+        st.markdown("3. **Aviso Prévio**: Art. 487 da CLT.")
+        st.markdown("4. **FGTS**: Lei nº 8.036/1990.")
+        st.markdown("5. **Multa do FGTS (40%)**: Art. 18 da Lei nº 8.036/1990.")
+        st.markdown("6. **INSS**: Tabela de alíquotas vigente, conforme a Receita Federal.")
+        st.markdown("7. **Imposto de Renda**: Tabela progressiva do Imposto de Renda, conforme a Receita Federal.")
+        
+st.caption("Projeto de LegalTech (Direito do Trabalho) com Python e Streamlit")
