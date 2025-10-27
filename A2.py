@@ -140,13 +140,37 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
         
         # Passo a passo do cálculo:
         st.markdown("### Passo a Passo do Cálculo:")
-        st.write(f"1. **13º Salário Proporcional**: R$ {valor_13_proporcional:,.2f}")
-        st.write(f"2. **Férias Proporcionais (+ 1/3)**: R$ {valor_ferias_total:,.2f} (1/3 Adicional: R$ {valor_terco_constitucional:,.2f})")
-        st.write(f"3. **Aviso Prévio**: R$ {valor_aviso_previo:,.2f}")
-        st.write(f"4. **FGTS**: R$ {fgts:,.2f}")
-        st.write(f"5. **Multa do FGTS (40%)**: R$ {multa_fgts:,.2f}")
-        st.write(f"6. **INSS**: R$ {inss:,.2f}")
-        st.write(f"7. **Imposto de Renda (IR)**: R$ {ir:,.2f}")
+        
+        # Fórmulas detalhadas
+        st.write(f"1. **13º Salário Proporcional**: \n\n"
+                 f"Fórmula: `(Salário Mensal / 12) * Meses Trabalhados`\n"
+                 f"Valor: R$ {valor_13_proporcional:,.2f}")
+
+        st.write(f"2. **Férias Proporcionais (+ 1/3)**: \n\n"
+                 f"Fórmula para férias: `(Salário Mensal / 12) * Meses Trabalhados`\n"
+                 f"Fórmula para 1/3 adicional: `Férias Proporcionais / 3`\n"
+                 f"Valor Total: R$ {valor_ferias_total:,.2f} (1/3 Adicional: R$ {valor_terco_constitucional:,.2f})")
+
+        st.write(f"3. **Aviso Prévio**: \n\n"
+                 f"Fórmula: `(Salário Mensal / 30) * (30 + 3 * Anos de Serviço)`\n"
+                 f"Valor: R$ {valor_aviso_previo:,.2f}")
+
+        st.write(f"4. **FGTS**: \n\n"
+                 f"Fórmula: `Salário Mensal * 0.08 * Meses Trabalhados`\n"
+                 f"Valor: R$ {fgts:,.2f}")
+
+        st.write(f"5. **Multa do FGTS (40%)**: \n\n"
+                 f"Fórmula: `FGTS * 0.40`\n"
+                 f"Valor: R$ {multa_fgts:,.2f}")
+
+        st.write(f"6. **INSS**: \n\n"
+                 f"Fórmula: `Valor Bruto * alíquota do INSS correspondente`\n"
+                 f"Valor: R$ {inss:,.2f}")
+
+        st.write(f"7. **Imposto de Renda (IR)**: \n\n"
+                 f"Fórmula: `Valor Bruto * alíquota do IR correspondente`\n"
+                 f"Valor: R$ {ir:,.2f}")
+        
         st.write(f"**Total Bruto (sem deduções)**: R$ {total_bruto:,.2f}")
         st.write(f"**Total Devido (com deduções)**: R$ {total_devido:,.2f}")
 
@@ -181,4 +205,14 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
         st.markdown("---")
         st.info("⚠️ **Atenção:** Este é um cálculo simplificado. Considere as variações conforme o caso específico.")
 
+        # --- Fontes ---
+        st.markdown("### Fontes:")
+        st.markdown("1. **13º Salário**: Lei nº 4.090/1962.")
+        st.markdown("2. **Férias**: Art. 129 da CLT e Constituição Federal (Art. 7º, inciso XVII).")
+        st.markdown("3. **Aviso Prévio**: Art. 487 da CLT.")
+        st.markdown("4. **FGTS**: Lei nº 8.036/1990.")
+        st.markdown("5. **Multa do FGTS (40%)**: Art. 18 da Lei nº 8.036/1990.")
+        st.markdown("6. **INSS**: Tabela de alíquotas vigente, conforme a Receita Federal.")
+        st.markdown("7. **Imposto de Renda**: Tabela progressiva do Imposto de Renda, conforme a Receita Federal.")
+        
 st.caption("Projeto de LegalTech (Direito do Trabalho) com Python e Streamlit")
