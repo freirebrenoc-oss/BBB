@@ -127,14 +127,13 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
         fgts = calcular_fgts(salario_base, meses_trabalhados)
         multa_fgts = calcular_multa_fgts(fgts)
         
-        # Cálculo do INSS apenas sobre as verbas tributáveis (13º, férias e aviso prévio)
-        total_tributavel = valor_13_proporcional + valor_ferias_total + valor_aviso_previo
-        inss = calcular_inss(total_tributavel)
+        # Calcular o INSS sobre o total bruto das verbas
+        total_bruto_rescisao = valor_13_proporcional + valor_ferias_total + valor_aviso_previo + fgts + multa_fgts
+        inss = calcular_inss(total_bruto_rescisao)
         
-        ir = calcular_ir(total_tributavel)
+        ir = calcular_ir(total_bruto_rescisao)
 
         # Total de verbas (simples)
-        total_bruto_rescisao = valor_13_proporcional + valor_ferias_total + valor_aviso_previo + fgts + multa_fgts
         total_devido = total_bruto_rescisao - inss - ir
 
         # --- EXIBIÇÃO DOS RESULTADOS (Métricas Essenciais) ---
