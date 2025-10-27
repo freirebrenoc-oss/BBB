@@ -187,4 +187,58 @@ if st.button("Calcular Rescisão", type="primary"):
             "Saldo de Salário": saldo_salario,
             "13º Prop.": decimo_terceiro,
             "Férias Prop. + 1/3": ferias_prop + um_terco,
-            "Férias Vencidas +
+            "Férias Vencidas + 1/3": ferias_venc_valor,
+            "Aviso Prévio": aviso_valor,
+            "FGTS + Multa": fgts + multa,
+        }
+        
+        categorias_desconto = {
+            "INSS": inss * (-1),
+            "IRRF": ir * (-1),
+        }
+        
+        categorias_barras = list(categorias_recebimento.keys()) + list(categorias_desconto.keys())
+        valores_barras = list(categorias_recebimento.values()) + list(categorias_desconto.values())
+
+        cores_barras = ['#4CAF50'] * len(categorias_recebimento) + ['#F44336'] * len(categorias_desconto)
+        
+        plt.figure(figsize=(12, 6))
+        plt.bar(categorias_barras, valores_barras, color=cores_barras)
+        plt.title("Distribuição e Impacto das Verbas Rescisórias", fontsize=14)
+        plt.ylabel("Valor (R$)", fontsize=12)
+        plt.xticks(rotation=45, ha='right', fontsize=10)
+        plt.axhline(0, color='gray', linewidth=0.8)
+        
+        st.pyplot(plt)
+
+        st.markdown("---")
+
+        # --- GRÁFICO DE PIZZA ---
+        st.subheader("🥧 Proporção das Verbas de Recebimento (Gráfico de Pizza)")
+
+        labels = []
+        sizes = []
+        for cat, val in categorias_recebimento.items():
+            if val > 0:
+                labels.append(cat)
+                sizes.append(val)
+        
+        if sizes:
+            plt.figure(figsize=(8, 8))
+            plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'black'})
+            plt.title("Composição do Valor Bruto dos Proventos", fontsize=14)
+            st.pyplot(plt)
+        else:
+            st.warning("Não há valores positivos para exibir no Gráfico de Pizza (Verbas de Recebimento).")
+            
+        st.markdown("---")
+        
+        # --- FONTES E OBSERVAÇÕES ---
+        st.subheader("📚 Observações e Aviso Legal")
+        st.warning("""
+        **⚠️ Aviso de Simulação:**
+        * Este é um cálculo **estimativo**. Os valores de INSS e IRRF utilizam tabelas simplificadas (Base: 2024/2025) e as regras de dedução e incidência real podem ser mais complexas.
+        * **Não substitui** o cálculo oficial da folha de pagamento feito por um contador ou o cálculo judicial realizado por um perito.
+        * **Aconselha-se sempre a consulta** a um profissional de contabilidade ou a um advogado trabalhista para obter valores exatos e completos.
+        """)
+        st.caption("📘 Projeto de LegalTech (Direito do Trabalho) — desenvolvido em Python e Streamlit.")
