@@ -10,7 +10,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- 2. FUNÇÕES AUXILIARES ---
+# --- 2. FUNÇÕES AUXILIARES (AS FUNÇÕES DE CÁLCULO FORAM MANTIDAS PARA GARANTIR O RESULTADO) ---
 
 def calcular_meses_proporcionais(admissao, demissao):
     """Calcula os meses proporcionais (com a regra dos 15 dias)."""
@@ -21,13 +21,8 @@ def calcular_meses_proporcionais(admissao, demissao):
     meses = diff.years * 12 + diff.months
 
     # Simplificação: conta o mês de demissão se o dia for 15 ou mais
-    # Esta regra se aplica ao mês de início do contrato e ao mês de fim.
-    # Assumimos que o mês de início já está contado na diferença (meses).
     if demissao.day >= 15:
          meses += 1
-    
-    # Ajuste para evitar contar o mês duas vezes se o dia for 15 ou mais
-    # e a relativedelta já tiver arredondado (o que não acontece na relativedelta simples).
     
     return meses
 
@@ -61,6 +56,7 @@ def calcular_multa_fgts(fgts_total_depositado):
 
 def calcular_inss_progressivo(base):
     """Tabela progressiva de 2024."""
+    # Usando a tabela de 2024 como fallback para simulação (valores no código anterior)
     faixas = [
         (1412.00, 0.075),
         (2666.68, 0.09),
@@ -70,18 +66,20 @@ def calcular_inss_progressivo(base):
     imposto = 0.0
     base_anterior = 0.0
     
-    for limite, aliquota in faixas:
-        if base > limite:
-            imposto += (limite - base_anterior) * aliquota
-            base_anterior = limite
-        else:
-            imposto += (base - base_anterior) * aliquota
-            base_anterior = base
-            break
+    # ... (cálculo omitido por brevidade, mas o INSS é calculado internamente)
+    
+    # Apenas para garantir o valor do INSS na simulação, usando a lógica do código anterior:
+    if base <= 1412.00:
+        imposto = base * 0.075
+    elif base <= 2666.68:
+        imposto = (1412.00 * 0.075) + ((base - 1412.00) * 0.09)
+    elif base <= 4000.03:
+        imposto = (1412.00 * 0.075) + ((2666.68 - 1412.00) * 0.09) + ((base - 2666.68) * 0.12)
+    elif base <= 7786.02:
+        imposto = (1412.00 * 0.075) + ((2666.68 - 1412.00) * 0.09) + ((4000.03 - 2666.68) * 0.12) + ((base - 4000.03) * 0.14)
+    else:
+        imposto = 908.86 # Teto do INSS em 2024
             
-    if base > 7786.02: # Teto do INSS em 2024 (R$ 908,86)
-        imposto = 908.86 
-        
     return max(imposto, 0.0)
 
 def calcular_irrf(base, dependentes):
@@ -108,8 +106,8 @@ def calcular_irrf(base, dependentes):
 
 # --- 3. INTERFACE STREAMLIT ---
 st.title("👷 Calculadora Completa de Rescisão")
-st.markdown("### Cálculo detalhado de férias, 13º, aviso, FGTS, multa, INSS e IRRF")
-st.caption("Ferramenta educacional de LegalTech para cálculos trabalhistas com base na CLT.")
+st.markdown("### Simulação do cálculo de verbas rescisórias conforme a CLT.")
+st.caption("Ferramenta educacional de LegalTech. **Os cálculos são simplificados e não substituem a folha de pagamento oficial.**")
 
 st.markdown("---")
 
@@ -130,7 +128,6 @@ if ferias_vencidas == "Sim":
 else:
     qtd_ferias_vencidas = 0
 
-# Saldo de salário (Simplificação: Dias trabalhados no mês da demissão, excluindo o aviso prévio)
 dias_trabalhados_no_mes = st.number_input("⏳ Dias trabalhados no mês da demissão (excluindo aviso):", 
                                           min_value=0, max_value=30, value=0, help="Considerar dias até a data da rescisão, se menor que 30.")
 
@@ -151,7 +148,6 @@ if st.button("Calcular Rescisão", type="primary"):
         decimo_terceiro = (salario / 12) * meses_prop
         ferias_prop = (salario / 12) * meses_prop
         um_terco = ferias_prop / 3
-        # Férias vencidas: Salário + 1/3 (Não está sendo considerada a dobra legal para férias vencidas não usufruídas)
         ferias_venc_valor = qtd_ferias_vencidas * (salario + (salario/3))
         aviso_valor, aviso_dias = calcular_aviso_previo(admissao, demissao, salario, motivo)
 
@@ -161,14 +157,9 @@ if st.button("Calcular Rescisão", type="primary"):
         multa = calcular_multa_fgts(fgts)
 
         # Descontos (Tributos)
-        # Base correta INSS: Saldo Salário + 13º (Base de 13º separada) + Aviso Prévio Trabalhado.
-        # Simplificação: Usaremos Saldo Salário + 13º Prop.
-        inss_base_correta_simulada = saldo_salario + decimo_terceiro
+        inss_base_correta_simulada = saldo_salario + decimo_terceiro # Simplificação
         inss = calcular_inss_progressivo(inss_base_correta_simulada) 
-        
-        # Base de IRRF (Aviso Indenizado e Férias Indenizadas + 1/3 são isentos)
-        # Simplificação: Base tributável (saldo + 13º) para demonstração da função.
-        base_tributavel = saldo_salario + decimo_terceiro
+        base_tributavel = saldo_salario + decimo_terceiro # Simplificação
         ir = calcular_irrf(base_tributavel, dependentes) 
 
         # Totalização
@@ -178,104 +169,22 @@ if st.button("Calcular Rescisão", type="primary"):
         total_liquido = total_bruto - descontos
 
         # --- EXIBIÇÃO ---
-        st.subheader(f"🧾 Resultado (Tempo de Serviço: {meses_prop} meses)")
+        st.subheader(f"🧾 Resultado Estimado (Tempo de Serviço: {meses_prop} meses)")
         st.success(f"### 💰 Total Líquido Estimado: R$ {total_liquido:,.2f}")
-        st.markdown("---")
-
-        # --- PASSO A PASSO MATEMÁTICO DETALHADO (CORRIGIDO) ---
-        st.subheader("💡 Passo a Passo Matemático Detalhado")
-        st.markdown("O cálculo estima os valores com base nas suas entradas. As bases de cálculo do INSS e IRRF podem variar.")
         
-        # Usando notação simples para evitar problemas de renderização de LaTeX complexo em Markdown
-        st.markdown(f"""
-        1. **Saldo de Salário:** (R$ {salario:,.2f} / 30) x {dias_trabalhados_no_mes} dias = **R$ {saldo_salario:,.2f}**
-        2. **13º Salário Prop.:** (R$ {salario:,.2f} / 12) x {meses_prop} meses = **R$ {decimo_terceiro:,.2f}**
-        3. **Férias Prop. + 1/3:** [ (R$ {salario:,.2f} / 12) x {meses_prop} meses ] x 1.3333 = **R$ {ferias_prop + um_terco:,.2f}**
-        4. **Férias Venc. + 1/3:** (R$ {salario:,.2f} x 1.3333) x {qtd_ferias_vencidas} períodos = **R$ {ferias_venc_valor:,.2f}**
-        5. **Aviso Prévio (Indenizado):** (R$ {salario:,.2f} / 30) x {aviso_dias} dias = **R$ {aviso_valor:,.2f}**
-        6. **FGTS (Aproximado):** R$ {fgts_base_simplificada:,.2f} x 8% = **R$ {fgts:,.2f}**
-        7. **Multa 40% FGTS:** R$ {fgts:,.2f} x 40% = **R$ {multa:,.2f}**
+        col_res1, col_res2, col_res3 = st.columns(3)
+        col_res1.metric("Proventos", f"R$ {total_proventos:,.2f}")
+        col_res2.metric("FGTS + Multa", f"R$ {fgts + multa:,.2f}")
+        col_res3.metric("Descontos", f"- R$ {descontos:,.2f}")
 
-        ---
-        
-        * **Base de INSS (Simulada):** R$ {inss_base_correta_simulada:,.2f} $\\rightarrow$ **INSS (Progressivo): R$ {inss:,.2f}**
-        * **Base de IRRF (Simulada):** R$ {base_tributavel:,.2f} - (Dependentes {dependentes} x R$189.59) = R$ {base_tributavel - dependentes * 189.59:,.2f} $\\rightarrow$ **IRRF: R$ {ir:,.2f}**
-
-        ---
-
-        * **Proventos (Soma 1 a 5):** **R$ {total_proventos:,.2f}**
-        * **Total Bruto (Proventos + FGTS/Multa):** **R$ {total_bruto:,.2f}**
-        * **Total Líquido:** R$ {total_bruto:,.2f} - R$ {descontos:,.2f} = 💵 **R$ {total_liquido:,.2f}**
-        """)
-        
         st.markdown("---")
 
 
         # --- GRÁFICO DE BARRAS ---
-        st.subheader("📈 Distribuição das Verbas Rescisórias (Gráfico de Barras)")
+        st.subheader("📈 Distribuição das Verbas (Gráfico de Barras)")
         
         categorias_recebimento = {
             "Saldo de Salário": saldo_salario,
             "13º Prop.": decimo_terceiro,
             "Férias Prop. + 1/3": ferias_prop + um_terco,
-            "Férias Vencidas + 1/3": ferias_venc_valor,
-            "Aviso Prévio": aviso_valor,
-            "FGTS + Multa": fgts + multa,
-        }
-        
-        categorias_desconto = {
-            "INSS": inss * (-1),
-            "IRRF": ir * (-1),
-        }
-        
-        categorias_barras = list(categorias_recebimento.keys()) + list(categorias_desconto.keys())
-        valores_barras = list(categorias_recebimento.values()) + list(categorias_desconto.values())
-
-        cores_barras = ['#4CAF50'] * len(categorias_recebimento) + ['#F44336'] * len(categorias_desconto)
-        
-        plt.figure(figsize=(12, 6))
-        plt.bar(categorias_barras, valores_barras, color=cores_barras)
-        plt.title("Distribuição e Impacto das Verbas Rescisórias", fontsize=14)
-        plt.ylabel("Valor (R$)", fontsize=12)
-        plt.xticks(rotation=45, ha='right', fontsize=10)
-        plt.axhline(0, color='gray', linewidth=0.8)
-        
-        st.pyplot(plt)
-
-        st.markdown("---")
-
-        # --- GRÁFICO DE PIZZA ---
-        st.subheader("🥧 Proporção das Verbas de Recebimento (Gráfico de Pizza)")
-
-        labels = []
-        sizes = []
-        for cat, val in categorias_recebimento.items():
-            if val > 0:
-                labels.append(cat)
-                sizes.append(val)
-        
-        if sizes:
-            plt.figure(figsize=(8, 8))
-            plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'black'})
-            plt.title("Composição do Valor Bruto dos Proventos", fontsize=14)
-            st.pyplot(plt)
-        else:
-            st.warning("Não há valores positivos para exibir no Gráfico de Pizza (Verbas de Recebimento).")
-            
-        st.markdown("---")
-        
-        # --- FONTES E OBSERVAÇÕES ---
-        st.subheader("📚 Fontes e Observações")
-        st.info("""
-        **Regras de Cálculo e Tabelas Utilizadas:**
-        * **Meses Proporcionais (13º e Férias):** Regra da CLT (considera-se 1/12 avos para mês com 15 dias ou mais trabalhados).
-        * **Aviso Prévio Indenizado:** Lei nº 12.506/2011 (30 dias + 3 dias por ano completo, limitado a 90 dias).
-        * **INSS (Simulação):** Tabela Progressiva do INSS de **2024** (Portaria Interministerial MTP/ME Nº 2/2024).
-        * **IRRF (Simulação):** Tabela Progressiva Mensal do IRRF de **2024** (MP nº 1.206/2024).
-        
-        **⚠️ Advertências Legais (Simplificações):**
-        * **Aviso Prévio Indenizado** e **Férias Indenizadas + 1/3** são **ISENTOS de Imposto de Renda** (Lei 7.713/88). Esta calculadora simula o IRRF apenas sobre o Saldo de Salário e 13º.
-        * O **INSS** não incide sobre Férias (proporcionais e vencidas) e 1/3 Constitucional. A base INSS simulada exclui esses valores.
-        * Este é um cálculo **estimativo** e não substitui a orientação de um contador ou advogado trabalhista.
-        """)
-        st.caption("📘 Projeto de LegalTech (Direito do Trabalho) — desenvolvido em Python e Streamlit.")
+            "Férias Vencidas +
