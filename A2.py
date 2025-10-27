@@ -114,4 +114,4 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
         st.markdown("---")
         st.info("⚠️ **Atenção:** Este é um cálculo simplificado. Não inclui aviso prévio, FGTS, multas, IR ou INSS. Utilize apenas para estimativas iniciais.")
 
-st.caption("Projeto de LegalTech (Direito do Trabalho) com Python e Streaml
+st.caption("Projeto de LegalTech (Direito do Trabalho) com Python e Streaml")
