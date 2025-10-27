@@ -1,11 +1,12 @@
 import streamlit as st
 from datetime import date
-from dateutil.relativedelta import relativedelta # Adiciona esta biblioteca para cálculo de meses
+from dateutil.relativedelta import relativedelta
+import matplotlib.pyplot as plt
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 
 st.set_page_config(
-    page_title="Calculadora Rescisória Básica",
+    page_title="Calculadora Rescisória Completa",
     page_icon="👷",
     layout="centered"
 )
@@ -15,30 +16,69 @@ st.set_page_config(
 # Usaremos esta função simples para calcular meses de trabalho
 def calcular_meses_proporcionais(admissao, demissao):
     """Calcula os meses proporcionais (com a regra dos 15 dias)."""
-    
-    # Se a demissão for antes da admissão (erro do usuário)
     if demissao <= admissao:
         return 0
         
-    # Calcula a diferença exata entre datas
     diferenca = relativedelta(demissao, admissao)
-    
-    # Total de meses exatos (anos * 12 + meses)
     total_meses = diferenca.years * 12 + diferenca.months
     
-    # Regra dos 15 dias (se o último mês trabalhado tiver 15 dias ou mais, conta como mês cheio)
-    # Aqui, simplificamos contando o mês de demissão se os dias forem >= 15
     if diferenca.days >= 15:
         total_meses += 1
         
     return total_meses
 
+# Função para calcular o Aviso Prévio
+def calcular_aviso_previo(admissao, demissao, salario_base):
+    """Calcula o aviso prévio proporcional ao tempo de serviço."""
+    diferenca = relativedelta(demissao, admissao)
+    anos_trabalhados = diferenca.years
+    dias_aviso_previo = 30 + anos_trabalhados * 3  # 30 dias + 3 dias por ano de serviço
+    valor_aviso_previo = (salario_base / 30) * dias_aviso_previo  # Aviso prévio proporcional
+    return valor_aviso_previo
+
+# Função para calcular o FGTS
+def calcular_fgts(salario_base, meses_trabalhados):
+    """Calcula o valor do FGTS a ser pago."""
+    return salario_base * 0.08 * meses_trabalhados
+
+# Função para calcular a Multa do FGTS
+def calcular_multa_fgts(fgts):
+    """Calcula a multa de 40% sobre o saldo do FGTS."""
+    return fgts * 0.40
+
+# Função para calcular o INSS
+def calcular_inss(valor_bruto):
+    """Calcula o INSS devido sobre o valor bruto."""
+    if valor_bruto <= 1302.00:
+        return valor_bruto * 0.075
+    elif valor_bruto <= 2571.29:
+        return valor_bruto * 0.09
+    elif valor_bruto <= 3856.94:
+        return valor_bruto * 0.12
+    elif valor_bruto <= 7507.49:
+        return valor_bruto * 0.14
+    else:
+        return 0  # Limite máximo do INSS
+
+# Função para calcular o Imposto de Renda (IR)
+def calcular_ir(valor_bruto):
+    """Calcula o Imposto de Renda sobre o valor bruto."""
+    if valor_bruto <= 1903.98:
+        return 0
+    elif valor_bruto <= 2826.65:
+        return valor_bruto * 0.075 - 142.80
+    elif valor_bruto <= 3751.05:
+        return valor_bruto * 0.15 - 354.80
+    elif valor_bruto <= 4664.68:
+        return valor_bruto * 0.225 - 636.13
+    else:
+        return valor_bruto * 0.275 - 869.36
 
 # --- 3. INTERFACE STREAMLIT ---
 
-st.title("👷 Calculadora de Rescisão Básica")
-st.markdown("### Férias e 13º Proporcionais (Direito do Trabalho)")
-st.caption("Insira os dados do contrato para calcular as verbas rescisórias mais comuns de forma simplificada.")
+st.title("👷 Calculadora de Rescisão Completa")
+st.markdown("### Férias, 13º, Aviso Prévio, FGTS, Multa FGTS, IR e INSS (Direito do Trabalho)")
+st.caption("Insira os dados do contrato para calcular as verbas rescisórias mais comuns de forma completa.")
 
 st.markdown("---")
 
@@ -77,24 +117,23 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
     if meses_trabalhados <= 0:
         st.error("Verifique as datas de Admissão e Demissão. O cálculo não é possível.")
     else:
-        # Lógica de Cálculo:
-        # Valor Proporcional = Salário / 12 * Meses Trabalhados
-        
-        # 4.1. 13º Salário Proporcional
+        # Cálculos das verbas rescisórias
         valor_13_proporcional = (salario_base / 12) * meses_trabalhados
-        
-        # 4.2. Férias Proporcionais
-        # As férias são pagas com acréscimo de 1/3
         valor_ferias_prop_base = (salario_base / 12) * meses_trabalhados
         valor_terco_constitucional = valor_ferias_prop_base / 3
         valor_ferias_total = valor_ferias_prop_base + valor_terco_constitucional
-        
+        valor_aviso_previo = calcular_aviso_previo(data_admissao, data_demissao, salario_base)
+        fgts = calcular_fgts(salario_base, meses_trabalhados)
+        multa_fgts = calcular_multa_fgts(fgts)
+        inss = calcular_inss(valor_13_proporcional + valor_ferias_total + valor_aviso_previo)
+        ir = calcular_ir(valor_13_proporcional + valor_ferias_total + valor_aviso_previo)
+
         # Total de verbas (simples)
-        total_devido = valor_13_proporcional + valor_ferias_total
+        total_devido = valor_13_proporcional + valor_ferias_total + valor_aviso_previo + fgts + multa_fgts - inss - ir
 
         # --- EXIBIÇÃO DOS RESULTADOS (Métricas Essenciais) ---
         
-        st.subheader(f"Resultado Simplificado (Meses Contados: {meses_trabalhados})")
+        st.subheader(f"Resultado Completo (Meses Contados: {meses_trabalhados})")
         st.success(f"### TOTAL ESTIMADO DEVIDO: R$ {total_devido:,.2f}")
         
         col_13, col_ferias = st.columns(2)
@@ -111,7 +150,22 @@ if st.button("Calcular Verbas Rescisórias", type="primary"):
             delta_color="normal"
         )
         
-        st.markdown("---")
-        st.info("⚠️ **Atenção:** Este é um cálculo simplificado. Não inclui aviso prévio, FGTS, multas, IR ou INSS. Utilize apenas para estimativas iniciais.")
+        # Gráfico de barras com todas as verbas
+        def plot_grafico_verbas_rescisorias(valor_13, valor_ferias, valor_terco, aviso, fgts, multa, inss, ir):
+            categorias = ['13º Salário', 'Férias Proporcionais', '1/3 Adicional', 'Aviso Prévio', 'FGTS', 'Multa FGTS', 'INSS', 'IR']
+            valores = [valor_13, valor_ferias, valor_terco, aviso, fgts, multa, inss, ir]
+            
+            plt.figure(figsize=(10, 6))
+            plt.bar(categorias, valores, color=['blue', 'green', 'orange', 'red', 'purple', 'cyan', 'brown', 'pink'])
+            plt.title('Distribuição das Verbas Rescisórias', fontsize=14)
+            plt.xlabel('Categorias de Verbas', fontsize=12)
+            plt.ylabel('Valor (R$)', fontsize=12)
+            plt.xticks(rotation=45)
+            st.pyplot(plt)
 
-st.caption("Projeto de LegalTech (Direito do Trabalho) com Python e Streaml")
+        plot_grafico_verbas_rescisorias(valor_13_proporcional, valor_ferias_total, valor_terco_constitucional, valor_aviso_previo, fgts, multa_fgts, inss, ir)
+        
+        st.markdown("---")
+        st.info("⚠️ **Atenção:** Este é um cálculo simplificado. Considere as variações conforme o caso específico.")
+
+st.caption("Projeto de LegalTech (Direito do Trabalho) com Python e Streamlit")
