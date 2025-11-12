@@ -2,71 +2,133 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 
-# Dados baseados no teste regulatório
-dados = {
-    "Mês": ["jun/24", "jul/24", "ago/24", "set/24", "out/24"],
-    "Taxa de inadimplência (%)": [6.5, 7.2, 8.0, 9.1, 8.5],
-    "Benefício líquido do Free Flow (%)": [4, 5.5, 6.8, 8.2, 9.5]
-}
+st.set_page_config(page_title="Free Flow — Eficiência Regulatória da ANTT", layout="wide")
 
-df = pd.DataFrame(dados)
-
-# Layout da página
-st.title("Efeitos da Regulação Inteligente da ANTT sobre o Modelo Free Flow")
+st.title("Free Flow no Brasil: Benefícios Superam os Custos de Enforcement")
 st.markdown("""
-Este gráfico demonstra que, embora a **inadimplência** apresente crescimento inicial no sistema de pedágio eletrônico (*Free Flow*),
-a **regulação inteligente da ANTT** — por meio do *sandbox regulatório* e do ajuste do prazo de pagamento — 
-gera **eficiência líquida positiva**, mostrando que os **benefícios superam os custos de enforcement**.
+O modelo **Free Flow** representa uma ruptura positiva na infraestrutura de pedágio,
+reduzindo **custos de capital (CAPEX)** e **operacionais (OPEX)**, além de **minimizar impactos ambientais**.
+Apesar de desafios de **inadimplência e impontualidade**, a **regulação inteligente da ANTT**
+mostra que os **benefícios líquidos superam amplamente os custos de enforcement**.
+---
 """)
 
-# Criação do gráfico
-fig = go.Figure()
+# ===================== GRÁFICO 1 — CAPEX =====================
+st.subheader("1️⃣ Redução de CAPEX: Free Flow vs. Modelo Tradicional")
 
-# Linha da inadimplência
-fig.add_trace(go.Scatter(
-    x=df["Mês"],
-    y=df["Taxa de inadimplência (%)"],
-    mode="lines+markers",
-    name="Taxa de Inadimplência",
-    line=dict(color="red", width=3),
-    marker=dict(size=8)
+capex_data = pd.DataFrame({
+    "Modelo": ["Tradicional (3 Praças)", "Free Flow (3 Pórticos)"],
+    "Custo (R$ milhões)": [216.9, 30.7]
+})
+
+fig1 = go.Figure(go.Bar(
+    x=capex_data["Modelo"],
+    y=capex_data["Custo (R$ milhões)"],
+    text=capex_data["Custo (R$ milhões)"],
+    textposition="auto",
+    marker_color=["#C0392B", "#27AE60"]
 ))
+fig1.update_layout(title="Redução de 86% no Custo de Capital (CAPEX)",
+                   yaxis_title="Custo Total (R$ milhões)",
+                   template="plotly_white")
+st.plotly_chart(fig1, use_container_width=True)
 
-# Linha dos benefícios líquidos
-fig.add_trace(go.Scatter(
-    x=df["Mês"],
-    y=df["Benefício líquido do Free Flow (%)"],
-    mode="lines+markers",
-    name="Benefício Líquido (eficiência)",
-    line=dict(color="green", width=3, dash="dash"),
-    marker=dict(size=8)
+st.markdown("""
+💡 **Análise:**  
+O custo de implantação do modelo Free Flow é **86% menor** que o do modelo tradicional.  
+A eliminação de obras civis e desapropriações gera economia direta e **reduz o custo de entrada do sistema**, 
+superando com folga qualquer perda potencial com inadimplência (~8%).
+""")
+
+# ===================== GRÁFICO 2 — OPEX =====================
+st.subheader("2️⃣ Redução de OPEX: Custos Operacionais Eliminados")
+
+opex_data = pd.DataFrame({
+    "Categoria": ["Pessoal (Arrecadadores, Conferentes, Líderes)", "Transporte de Valores", "Operação e Manutenção Eletrônica"],
+    "Modelo Tradicional (R$ milhões/ano)": [83, 10, 7],
+    "Modelo Free Flow (R$ milhões/ano)": [5, 0, 9]
+})
+
+fig2 = go.Figure()
+fig2.add_trace(go.Bar(
+    x=opex_data["Categoria"],
+    y=opex_data["Modelo Tradicional (R$ milhões/ano)"],
+    name="Tradicional",
+    marker_color="#C0392B"
 ))
+fig2.add_trace(go.Bar(
+    x=opex_data["Categoria"],
+    y=opex_data["Modelo Free Flow (R$ milhões/ano)"],
+    name="Free Flow",
+    marker_color="#27AE60"
+))
+fig2.update_layout(barmode="group", template="plotly_white",
+                   title="Redução de Custos Operacionais (OPEX)",
+                   yaxis_title="Custo Estimado (R$ milhões/ano)")
+st.plotly_chart(fig2, use_container_width=True)
 
-# Linha de compensação visual
-fig.add_hline(y=8.03, line_dash="dot", line_color="gray",
-              annotation_text="Média de inadimplência no período (8,03%)",
-              annotation_position="bottom right")
+st.markdown("""
+💡 **Análise:**  
+O modelo Free Flow **elimina praticamente todo o custo de pessoal** e o de transporte de valores.  
+Mesmo considerando o custo tecnológico de manutenção, há uma **redução líquida de aproximadamente 70% no OPEX**.
+Essas economias **mais do que compensam** as perdas de receita decorrentes da inadimplência inicial (~8%).
+""")
 
-fig.update_layout(
-    title="Free Flow: os benefícios superam os custos de enforcement",
-    xaxis_title="Período (2024)",
-    yaxis_title="Percentual (%)",
-    legend_title="Indicadores",
-    template="plotly_white",
-    font=dict(size=14)
-)
+# ===================== GRÁFICO 3 — INADIMPLÊNCIA =====================
+st.subheader("3️⃣ Taxa de Inadimplência e Impontualidade (Sandbox ANTT)")
 
-# Comentário interpretativo
-st.plotly_chart(fig)
+inad_data = pd.DataFrame({
+    "Mês": ["jun/24", "jul/24", "ago/24", "set/24", "out/24"],
+    "Taxa de Inadimplência (%)": [6.5, 7.2, 8.0, 9.1, 8.5],
+    "Taxa de Impontualidade (%)": [11.8, 11.9, 11.8, 11.9, 11.8]
+})
+
+fig3 = go.Figure()
+fig3.add_trace(go.Scatter(x=inad_data["Mês"], y=inad_data["Taxa de Inadimplência (%)"],
+                          mode="lines+markers", name="Inadimplência", line=dict(color="red", width=3)))
+fig3.add_trace(go.Scatter(x=inad_data["Mês"], y=inad_data["Taxa de Impontualidade (%)"],
+                          mode="lines+markers", name="Impontualidade", line=dict(color="orange", width=3, dash="dash")))
+fig3.add_hline(y=8.03, line_dash="dot", line_color="gray",
+               annotation_text="Média de inadimplência: 8,03%", annotation_position="bottom right")
+fig3.update_layout(template="plotly_white", title="Tendência da Inadimplência e Impontualidade (2024)",
+                   yaxis_title="Percentual (%)", legend_title="Indicadores")
+st.plotly_chart(fig3, use_container_width=True)
 
 st.markdown("""
 📊 **Análise:**  
-- A **linha vermelha** mostra o aumento temporário da inadimplência (até 9,1% em setembro).  
-- A **linha verde** mostra o crescimento do **benefício líquido**, que supera os 9% ao final do período.  
-- Isso demonstra que, ao ajustar o prazo de pagamento e aprimorar os mecanismos de cobrança, 
-a **ANTT converteu aprendizado regulatório em eficiência econômica**, reduzindo os custos de transação 
-associados ao pluralismo institucional.  
+Apesar da inadimplência ter atingido **9,1% em setembro/2024**, a média do período (8,03%) é **plenamente absorvível**
+dentro das economias de CAPEX e OPEX.  
+O dado reforça que o **problema não é tecnológico, mas institucional e comportamental** — 
+e a ANTT respondeu com **smart regulation**, ajustando prazos e fluxos de pagamento.
+""")
 
-✅ **Conclusão:** mesmo com inadimplência moderada, o **Free Flow permanece vantajoso**.  
-A regulação eficiente transforma o risco de inadimplência em um **custo de transição**, não estrutural.
+# ===================== GRÁFICO 4 — EFICIÊNCIA REGULATÓRIA =====================
+st.subheader("4️⃣ Regulação Inteligente da ANTT: Eficiência Líquida Positiva")
+
+eff_data = pd.DataFrame({
+    "Mês": ["jun/24", "jul/24", "ago/24", "set/24", "out/24"],
+    "Benefício Líquido (%)": [4.0, 5.5, 6.8, 8.2, 9.5],
+    "Inadimplência (%)": [6.5, 7.2, 8.0, 9.1, 8.5]
+})
+
+fig4 = go.Figure()
+fig4.add_trace(go.Scatter(x=eff_data["Mês"], y=eff_data["Benefício Líquido (%)"],
+                          mode="lines+markers", name="Benefício Líquido (Eficiência)",
+                          line=dict(color="green", width=3)))
+fig4.add_trace(go.Scatter(x=eff_data["Mês"], y=eff_data["Inadimplência (%)"],
+                          mode="lines+markers", name="Inadimplência",
+                          line=dict(color="red", width=3, dash="dash")))
+
+fig4.update_layout(template="plotly_white", title="Evolução da Eficiência Líquida — Benefícios Superam Custos",
+                   yaxis_title="Percentual (%)", legend_title="Indicadores")
+st.plotly_chart(fig4, use_container_width=True)
+
+st.markdown("""
+✅ **Conclusão Geral:**  
+Mesmo com uma **inadimplência média de 8,03%**, o **Free Flow é economicamente superior** ao modelo tradicional.  
+A **ANTT, com sua regulação inteligente**, ajustou o sistema (via sandbox) para alinhar prazos ao comportamento social, 
+reduzindo custos de enforcement e garantindo sustentabilidade financeira.  
+
+➡️ **Os benefícios (redução de CAPEX e OPEX + eficiência regulatória)** **superam amplamente** os custos decorrentes da inadimplência.  
+O custo de enforcement é **transitório**, enquanto os ganhos estruturais do Free Flow são **permanentes e cumulativos**.
 """)
