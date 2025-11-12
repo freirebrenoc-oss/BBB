@@ -20,8 +20,11 @@ requirements.txt: streamlit\npandas\nplotly
 
 """
 
-import streamlit as st import pandas as pd import plotly.express as px import plotly.graph_objects as go from io import StringIO
-
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from io import StringIO
 st.set_page_config(page_title="Enforcement Pluralism — Custos de Transação", layout="wide")
 
 st.title("Enforcement pluralism no Brasil — visualização dos custos de transação") st.markdown( "Este app demonstra, com dados sintéticos, como a fragmentação institucional (ANTT, concessionárias, órgãos de trânsito) gera custos de transação — tempo e custo monetário — e como isso impacta a eficácia da sanção.")
