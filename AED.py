@@ -27,8 +27,12 @@ import plotly.graph_objects as go
 from io import StringIO
 st.set_page_config(page_title="Enforcement Pluralism — Custos de Transação", layout="wide")
 
-st.title("Enforcement pluralism no Brasil — visualização dos custos de transação") st.markdown( "Este app demonstra, com dados sintéticos, como a fragmentação institucional (ANTT, concessionárias, órgãos de trânsito) gera custos de transação — tempo e custo monetário — e como isso impacta a eficácia da sanção.")
+st.title("Enforcement pluralism no Brasil — visualização dos custos de transação")
 
+st.markdown(
+    "Este app demonstra, com dados sintéticos, como a fragmentação institucional (ANTT, concessionárias, órgãos de trânsito) "
+    "gera custos de transação — tempo e custo monetário — e como isso impacta a eficácia da sanção."
+)
 Dataset sintético (pode fazer upload de CSV com as colunas: stage, actor, days, monetary_cost, cases)
 
 @st.cache_data def make_sample_data(): data = [ {"stage": "Detec\u00e7\u00e3o/Identifica\u00e7\u00e3o", "actor": "Concession\u00e1ria", "days": 10, "monetary_cost": 50, "cases": 1000}, {"stage": "Comunica\u00e7\u00e3o ao Órg\u00e3o de Tr\u00e2nsito", "actor": "Concession\u00e1ria", "days": 15, "monetary_cost": 80, "cases": 800}, {"stage": "Valida\u00e7\u00e3o/Autua\u00e7\u00e3o", "actor": "Órgão de Trânsito (CONTRAN/SENATRAN)", "days": 40, "monetary_cost": 120, "cases": 700}, {"stage": "Procedimentos administrativos", "actor": "Órgão de Trânsito", "days": 60, "monetary_cost": 200, "cases": 500}, {"stage": "Execu\u00e7\u00e3o/Multa aplicada", "actor": "Órgão de Trânsito", "days": 20, "monetary_cost": 0, "cases": 400}, {"stage": "Recursos e contesta\u00e7\u00f5es", "actor": "Consumidor / Tribunais", "days": 90, "monetary_cost": 300, "cases": 200}, ] return pd.DataFrame(data)
