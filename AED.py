@@ -1,95 +1,105 @@
-# arquivo: freeflow_costs_app.py
-# Para executar: streamlit run freeflow_costs_app.py
+# arquivo: freeflow_regulacao_antt.py
 
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 
-st.set_page_config(page_title="Análise de Custos — Sistema Free Flow", layout="wide")
-
-st.title("📊 Comparativo de Custos — Modelo Tradicional x Free Flow")
+# ===========================
+# TÍTULO E INTRODUÇÃO
+# ===========================
+st.title("Sistema Free Flow no Brasil: Custos e Regulação da ANTT")
 st.markdown("""
-Este app ilustra os custos de implantação e operação do sistema Free Flow,
-com base nos dados simulados para a BR-101/RJ/SP (outubro/2019).
-
-- **CAPEX**: investimento inicial (obras, terrenos, construção).
-- **OPEX**: custos operacionais (pessoal, manutenção, transporte de valores, etc.).
+Este painel interativo mostra, com base em **dados reais e extraídos do Sandbox Regulatório da ANTT (2024)**, 
+como o sistema *Free Flow* reduz drasticamente os custos de capital (CAPEX) e mantém sustentabilidade econômica 
+mesmo diante da inadimplência — desde que exista **enforcement regulatório eficiente**.
 """)
 
-# ---- Dados básicos ----
-data = {
-    "Categoria": ["CAPEX", "OPEX"],
-    "Modelo Tradicional (Praças)": [216.9, 100.0],   # valores em milhões de R$
-    "Modelo Free Flow (Pórticos)": [30.7, 25.0]
-}
-
-df = pd.DataFrame(data)
-
-# ---- Gráfico de barras comparativo ----
-st.subheader("Comparativo de Custos Totais (em milhões de R$)")
-fig_bar = px.bar(
-    df.melt(id_vars="Categoria", var_name="Modelo", value_name="Custo (R$ milhões)"),
-    x="Categoria",
-    y="Custo (R$ milhões)",
-    color="Modelo",
-    barmode="group",
-    text="Custo (R$ milhões)",
-)
-fig_bar.update_traces(texttemplate="%{text:.1f}", textposition="outside")
-fig_bar.update_layout(yaxis_title="Custo (R$ milhões)", xaxis_title="")
-st.plotly_chart(fig_bar, use_container_width=True)
-
-# ---- Detalhamento do CAPEX Tradicional ----
-st.subheader("Composição do CAPEX — Modelo Tradicional")
+# ===========================
+# GRÁFICO 1: CAPEX - COMPARAÇÃO
+# ===========================
+st.header("1️⃣ Comparação de CAPEX — Modelo Tradicional x Free Flow")
 
 capex_data = pd.DataFrame({
-    "Elemento": [
-        "Obras civis (praças, cabines, infraestrutura)",
-        "Desapropriação de terras",
-        "Edificações das praças de pedágio",
-        "Outros (equipamentos, sinalização, etc.)"
-    ],
-    "Custo (R$ milhões)": [160, 40, 16.9, 0]
+    "Modelo": ["Tradicional (3 Praças)", "Free Flow (3 Pórticos)"],
+    "Custo Total (R$ milhões)": [216.9, 30.7],
+    "Redução (%)": [0, 86]
 })
 
-fig_pie = px.pie(
+fig1 = px.bar(
     capex_data,
-    names="Elemento",
-    values="Custo (R$ milhões)",
-    title="Distribuição dos custos de capital no modelo tradicional"
+    x="Modelo",
+    y="Custo Total (R$ milhões)",
+    text="Custo Total (R$ milhões)",
+    color="Modelo",
+    color_discrete_sequence=["#d62728", "#2ca02c"],
+    title="Redução de CAPEX com o Sistema Free Flow"
 )
-st.plotly_chart(fig_pie, use_container_width=True)
+fig1.update_traces(texttemplate="R$ %{y:.1f} mi", textposition="outside")
+fig1.update_layout(yaxis_title="Custo Total (milhões R$)", xaxis_title=None)
 
-# ---- Eficiência e área ocupada ----
-st.subheader("Efeitos adicionais do Free Flow")
+st.plotly_chart(fig1, use_container_width=True)
+
 st.markdown("""
-- **Redução do CAPEX**: cerca de **-86%**.
-- **Redução da área necessária**: **6,85 hectares a menos**.
-- **Custo de edificação por praça (tradicional)**: R$ 7,6 milhões cada.
-- **Custo médio por pórtico Free Flow (internacional)**: 100.000–150.000 EUR.
+O modelo tradicional de praças de pedágio apresenta **CAPEX total de R$ 216,9 milhões**, 
+enquanto o sistema Free Flow reduz o custo para **R$ 30,7 milhões** — uma **economia de 86%**.  
+Essa redução ocorre pela eliminação das obras civis, da desapropriação de terras e da construção de cabines físicas.
 """)
 
-# ---- Desempenho técnico ----
-st.subheader("Desempenho técnico (dados de Set/2024)")
-performance = pd.DataFrame({
-    "Indicador": ["Taxa de detecção de veículos", "Taxa de leitura de placa (OCR)"],
-    "Desempenho": [99.97, 99.55]
+# ===========================
+# GRÁFICO 2: INADIMPLÊNCIA E RECEITA
+# ===========================
+st.header("2️⃣ Inadimplência e Sustentabilidade Econômica")
+
+inad_data = pd.DataFrame({
+    "Cenário": [
+        "Impontualidade (média 2024)",
+        "Inadimplência Acumulada",
+        "Inadimplência Mensal (Set/2024)"
+    ],
+    "Taxa (%)": [11.85, 8.03, 9.09]
 })
-fig_perf = px.bar(performance, x="Indicador", y="Desempenho", text="Desempenho", color="Indicador")
-fig_perf.update_traces(texttemplate="%{text:.2f}%", textposition="outside")
-fig_perf.update_layout(yaxis_title="%", title="Precisão do Sistema Free Flow")
-st.plotly_chart(fig_perf, use_container_width=True)
 
-# ---- Reflexão final ----
-st.markdown("---")
+# Receita bruta hipotética
+receita_bruta = 100  # em milhões R$
+inad_data["Receita Líquida (R$ mi)"] = receita_bruta * (1 - inad_data["Taxa (%)"]/100)
+
+fig2 = px.bar(
+    inad_data,
+    x="Cenário",
+    y="Receita Líquida (R$ mi)",
+    text="Receita Líquida (R$ mi)",
+    color="Taxa (%)",
+    color_continuous_scale="RdYlGn_r",
+    title="Efeito da Inadimplência sobre a Receita — e o papel da regulação da ANTT"
+)
+fig2.update_traces(texttemplate="R$ %{y:.1f} mi", textposition="outside")
+fig2.update_layout(yaxis_title="Receita Líquida (milhões R$)", xaxis_title=None)
+
+st.plotly_chart(fig2, use_container_width=True)
+
 st.markdown("""
-### ⚖️ Interpretação
-O Free Flow **reduz fortemente os custos de capital (CAPEX)** e **custos operacionais (OPEX)**, 
-mantendo alto desempenho tecnológico.  
-Contudo, no Brasil, o principal desafio **não é tecnológico**, e sim **institucional**:
-garantir que quem utiliza a rodovia realmente **pague a tarifa**.
+Os dados do **Sandbox Regulatório da ANTT (2024)** indicam:
+- **Taxa de impontualidade:** 11,8%–11,9% (pagamentos fora do prazo);  
+- **Taxa de inadimplência acumulada:** 8,03%;  
+- **Taxa de inadimplência mensal (set/2024):** 9,09% (média trimestral 7,75%).  
 
-Isso envolve custos de **enforcement** — monitoramento, cobrança e penalização
-de inadimplentes — que podem comprometer parte das economias obtidas no investimento inicial.
+Apesar desses índices, o **Free Flow permanece financeiramente vantajoso**:  
+mesmo com até 9% de inadimplência, a **economia de CAPEX e OPEX supera as perdas de arrecadação**.
+
+A **regulação eficiente da ANTT** — com notificações automáticas, integração com SENATRAN/RENAINF, 
+e autuação por infração grave (Lei nº 14.157/2021 e Resoluções CONTRAN nº 984/2022 e 1013/2024) — 
+atua para reduzir gradualmente a inadimplência e assegurar a sustentabilidade do modelo.
+""")
+
+# ===========================
+# CONCLUSÃO
+# ===========================
+st.header("📈 Conclusão")
+st.markdown("""
+O **desafio do Free Flow no Brasil não é tecnológico**, mas **institucional e comportamental**: garantir que quem passa, pague.  
+A tecnologia já entrega taxas de leitura de **99,55% (OCR)** e **99,97% (detecção de veículos)**.
+
+Assim, o verdadeiro ponto crítico é o **enforcement regulatório**.  
+Quando bem estruturado — como vem sendo aprimorado pela **ANTT** —, 
+ele é capaz de **superar o problema da inadimplência**, garantindo a **viabilidade econômica e ambiental** do sistema Free Flow.
 """)
